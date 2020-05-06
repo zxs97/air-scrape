@@ -28,7 +28,7 @@ jobs:
       shell: bash
       run: |
         mkdir output
-        bash data.sh > output/$(TZ='America/New_York' date --date "-1 days" +'%Y%m%d').json
+        bash data/data.sh > output/$(TZ='America/New_York' date --date "-1 days" +'%Y%m%d').json
         
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2
