@@ -1,0 +1,1 @@
+echo 'https://data.boston.gov/api/3/action/datastore_search_sql\?sql\=SELECT%20\*%20from%20%22fde6709d-62a7-4523-a8eb-76eac2004f4b%22%20WHERE%20issued_date%20LIKE%20%27'"$(TZ='America/New_York' date --date "-1 days" +'%Y-%m-%d')"%'%27' | xargs curl
