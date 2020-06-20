@@ -67,7 +67,7 @@ def get_result_bestbuy(url):
 
 def get_result_target(url, itv=2):
     browser.get(url)
-    time.sleep(itv)
+    time.sleep(5)
     try:
         browser.find_element_by_xpath("//button[@data-test='fiatsButton']").click()
         print('@')
@@ -89,14 +89,16 @@ def get_result_target(url, itv=2):
         browser.find_element_by_xpath("//div[@class='switch-track']").click()
         print('@@@@@@')
         time.sleep(itv)
-        result = browser.find_element_by_xpath(
+        results = browser.find_elements_by_xpath(
             "//div[@data-test='storeAvailabilityStoreCard']"
-        ).text
+        )
+        results = [_.text for _ in results]
         print('@@@@@@@')
+        print('Found results, to be filtered result by closest..')
     except:
         print(f"Did not get response for query {url}")
-        result = None
-    return result
+        results = None
+    return results
 
 
 def get_response(urls):
@@ -119,24 +121,35 @@ def parse_result_bestbuy(result):
         return result
 
 
-def parse_result_target(result, threshold=50):
+def parse_result_target(results, threshold=50):
     n_mile = None
-    if result is None:
+    if results is None:
         print('No result for target')
         return None
-    for elm in result.split("\n"):
-        if "mile" in elm:
-            res = re.search("^([\d\.]+)\s+miles$", elm)
-            if res is not None:
-                try:
-                    n_mile = float(res.group(1))
-                except ValueError:
-                    print("not a float")
-                    break
-                if n_mile is not None and n_mile <= threshold:
-                    return result
-    #     print(f'Checked, nothing within {threshold} miles at time {now}')
-    return None
+    output = []
+    nearby = None
+    for result in results:
+        if 'mile' not in result:
+            output.append(result)
+        else:
+            for elm in result.split("\n"):
+                if "mile" in elm:
+                    res = re.search("^([\d\.]+)\s+miles$", elm)
+                    if res is not None:
+                        try:
+                            n_mile = float(res.group(1))
+                        except ValueError:
+                            print("not a float")
+                            break
+                        if n_mile is not None and n_mile <= threshold:
+                            nearby = (n_mile, result) if ((nearby is None) or (n_mile < nearby[0])) else nearby
+                # print(f'Checked, nothing within {threshold} miles at time {now}')
+    if nearby is not None:
+        output.append(nearby[1])
+    if len(output) == 0:
+        return None
+    else:
+        return "\n".join(output)
 
 
 # data action
