@@ -130,7 +130,8 @@ def parse_result_target(results, threshold=50):
     nearby = None
     for result in results:
         if 'mile' not in result:
-            output.append(result)
+            continue # dont save local store's hit
+            # output.append(result)
         else:
             for elm in result.split("\n"):
                 if "mile" in elm:
