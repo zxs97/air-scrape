@@ -9,7 +9,8 @@ import time
 
 # setup selenium
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
-# from pyvirtualdisplay import Display
+from pyvirtualdisplay import Display
+# Display is needed in Docker runner
 
 # opts = Options()
 # opts.add_argument("--headless")
@@ -188,8 +189,9 @@ if __name__ == "__main__":
     urls = {"bb_ns": bb_ns, "tg_ns": tg_ns, "tg_rf": tg_rf}
 
     # get browser
-    # display = Display(visible=0, size=(800, 600))
-    # display.start()
+    # display is needed in docker runner
+    display = Display(visible=0, size=(800, 600))
+    display.start()
     
     browser = get_browser(args)
 
@@ -200,4 +202,4 @@ if __name__ == "__main__":
     print(now)
 
     browser.quit()
-    # display.stop()
+    display.stop()
