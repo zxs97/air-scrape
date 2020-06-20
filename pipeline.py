@@ -9,17 +9,37 @@ import time
 
 # setup selenium
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+# from pyvirtualdisplay import Display
 
-opts = Options()
-opts.add_argument("--headless")
-opts.log.level = "trace"
+# opts = Options()
+# opts.add_argument("--headless")
+# # opts.log.level = "trace"
 
-ff_binary = r"/home/hong/lib/firefox67/firefox"
-binary = FirefoxBinary(ff_binary)
-executable_path = r"/home/hong/.custom_bin/geckodriver"
-browser = webdriver.Firefox(
-    executable_path=executable_path, firefox_binary=binary, options=opts
-)
+# # ff_binary = r"/home/hong/lib/firefox67/firefox"
+# # binary = FirefoxBinary(ff_binary)
+# # executable_path = r"/home/hong/.custom_bin/geckodriver"
+# # browser = webdriver.Firefox(
+# #     executable_path=executable_path, firefox_binary=binary, options=opts
+# # )
+# browser = webdriver.Firefox(options=opts)
+def get_browser(args):
+    if args.mode == 'dev':
+        opts = Options()
+        opts.add_argument("--headless")
+        opts.log.level = "trace"
+
+        ff_binary = r"/home/hong/lib/firefox67/firefox"
+        binary = FirefoxBinary(ff_binary)
+        executable_path = r"/home/hong/.custom_bin/geckodriver"
+        browser = webdriver.Firefox(
+            executable_path=executable_path, firefox_binary=binary, options=opts
+        )
+    elif args.mode == 'prod':
+        browser = webdriver.Firefox()
+    else:
+        raise EnvironmentError
+    return browser
+
 
 bb_ns = "https://www.bestbuy.com/site/nintendo-switch-32gb-console-neon-red-neon-blue-joy-con/6364255.p?skuId=6364255"
 tg_ns = "https://www.target.com/p/nintendo-switch-with-neon-blue-and-neon-red-joy-con/-/A-77464001"
@@ -44,27 +64,34 @@ def get_result_bestbuy(url):
     return result
 
 
-def get_result_target(url, itv=1):
+def get_result_target(url, itv=2):
     browser.get(url)
     time.sleep(itv)
     try:
         browser.find_element_by_xpath("//button[@data-test='fiatsButton']").click()
+        print('@')
         time.sleep(itv)
         browser.find_element_by_xpath("//a[@data-test='storeSearchLink']").click()
+        print('@@')
         time.sleep(itv)
         browser.find_element_by_id("storeSearch").clear()
+        print('@@@')
         time.sleep(itv)
         browser.find_element_by_id("storeSearch").send_keys("02140")
+        print('@@@@')
         time.sleep(itv)
         browser.find_element_by_xpath(
             "//button[@data-test='fiatsUpdateLocationSubmitButton']"
         ).click()
+        print('@@@@@')
         time.sleep(itv)
         browser.find_element_by_xpath("//div[@class='switch-track']").click()
+        print('@@@@@@')
         time.sleep(itv)
         result = browser.find_element_by_xpath(
             "//div[@data-test='storeAvailabilityStoreCard']"
         ).text
+        print('@@@@@@@')
     except:
         print(f"Did not get response for query {url}")
         result = None
@@ -74,6 +101,7 @@ def get_result_target(url, itv=1):
 def get_response(urls):
     results = {}
     for k, url in urls.items():
+        print(f"Scraping {url}")
         if "bb" in k:
             results[k] = get_result_bestbuy(url)
         elif "tg" in k:
@@ -92,6 +120,9 @@ def parse_result_bestbuy(result):
 
 def parse_result_target(result, threshold=50):
     n_mile = None
+    if result is None:
+        print('No result for target')
+        return None
     for elm in result.split("\n"):
         if "mile" in elm:
             res = re.search("^([\d\.]+)\s+miles$", elm)
@@ -122,7 +153,7 @@ def get_curl_cmd(body, args):
 def sms_notify(result):
     now = datetime.now().strftime("%H:%M:%S")
     body = f"###\nPositive result: {result}\nAt time: {now}"
-    curl_cmd = get_curl_cmd(body)
+    curl_cmd = get_curl_cmd(body, args)
     code = os.system(curl_cmd)
     return code
 
@@ -150,12 +181,23 @@ if __name__ == "__main__":
     parser.add_argument('--password')
     parser.add_argument('--fromnumber')
     parser.add_argument('--tonumber')
+    parser.add_argument('--mode')
     args = parser.parse_args()
 
     now = datetime.now().strftime("%H:%M:%S")
     urls = {"bb_ns": bb_ns, "tg_ns": tg_ns, "tg_rf": tg_rf}
+
+    # get browser
+    # display = Display(visible=0, size=(800, 600))
+    # display.start()
+    
+    browser = get_browser(args)
+
     results = get_response(urls)
     code = act_on_results(results)
     print(results)
     print(code)
     print(now)
+
+    browser.quit()
+    # display.stop()
