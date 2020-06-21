@@ -42,9 +42,13 @@ def get_browser(args):
     return browser
 
 
-bb_store_suffix = "&qp=storepickupstores_facet%3DStore~537&extStoreId=537"
-bb_ns = "https://www.bestbuy.com/site/nintendo-switch-32gb-console-neon-red-neon-blue-joy-con/6364255.p?skuId=6364255" + bb_store_suffix
-bb_rf = "https://www.bestbuy.com/site/ring-fit-adventure-nintendo-switch/6352149.p?skuId=6352149" + bb_store_suffix
+suffix = lambda x: "&qp=storepickupstores_facet%3DStore~{store_id}&extStoreId={store_id}".format(store_id=x)
+bb_ns = "https://www.bestbuy.com/site/nintendo-switch-32gb-console-neon-red-neon-blue-joy-con/6364255.p?skuId=6364255"
+bb_ns_cambridge = bb_ns + suffix(537)
+bb_ns_everett = bb_ns + suffix(1088)
+bb_ns_southbay = bb_ns + suffix(1126)
+bb_ns_watertown = bb_ns + suffix(596)
+# bb_rf = "https://www.bestbuy.com/site/ring-fit-adventure-nintendo-switch/6352149.p?skuId=6352149" + bb_store_suffix
 
 tg_ns = "https://www.target.com/p/nintendo-switch-with-neon-blue-and-neon-red-joy-con/-/A-77464001"
 tg_rf = "https://www.target.com/p/ring-fit-adventure-nintendo-switch/-/A-76593324"
@@ -203,7 +207,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     now = datetime.now().strftime("%H:%M:%S")
-    urls = {"bb_ns": bb_ns, "bb_rf": bb_rf, "tg_ns": tg_ns, "tg_rf": tg_rf}
+    #urls = {"bb_ns": bb_ns, "bb_rf": bb_rf, "tg_ns": tg_ns, "tg_rf": tg_rf}
+    urls = {
+        "bb_ns_cambridge": bb_ns_cambridge,
+        "bb_ns_everett": bb_ns_everett,
+        "bb_ns_southbay": bb_ns_southbay,
+        "bb_ns_watertown": bb_ns_watertown,
+        "tg_ns": tg_ns
+    }
 
     # get browser
     # display is needed in docker runner
