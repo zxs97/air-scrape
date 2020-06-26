@@ -217,7 +217,8 @@ if __name__ == "__main__":
 
     now = datetime.now().strftime("%H:%M:%S")
     urls = {
-        **tg_urls, **bb_urls
+        **bb_urls,
+        **tg_urls,
     }
 
     # get browser
@@ -231,7 +232,8 @@ if __name__ == "__main__":
     code = act_on_results(results)
     for k, r in results.items():
         print(f"{k}=============================")
-        print("\n\n".join(r))
+        if isinstance(r, list): r = "\n\n".join(r)
+        print(r)
 
     print(code)
     print(now)
