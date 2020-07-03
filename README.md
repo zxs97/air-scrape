@@ -5,3 +5,5 @@ TODO
 
 BUG
 1. skip when there's no url (from bb)
+2. selenium.common.exceptions.InvalidSessionIdException: Message: Tried to run command without establishing a connection
+  1. This is due to clash of browser: refactor into a class, to allow reset browser once `browser.get()` fails
