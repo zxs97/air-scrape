@@ -10,7 +10,6 @@ import time
 # setup selenium
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
-# from pyvirtualdisplay import Display
 # Display is needed in Docker runner
 
 def get_browser(args):
@@ -155,6 +154,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.mode == 'prod':
+        from pyvirtualdisplay import Display
         display = Display(visible=0, size=(800, 600))
         display.start()
     
