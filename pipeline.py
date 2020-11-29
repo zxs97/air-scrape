@@ -12,6 +12,7 @@ from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
 # Display is needed in Docker runner
 
+
 def get_browser(args):
     if args.mode == "dev":
         opts = Options()
@@ -39,6 +40,52 @@ def scrape_target(year, month, day, target_logics):
         if hit_dates:
             results[k] = hit_dates
     return results
+
+
+def scrape_south_china_air(year, month, day):
+    hit_dates = {}
+    southchina_targets = {
+        "oversea.csair.com/new/us/en/flights?m=0&p=100&flex=1&t=LAX-CAN-20210101": "http://oversea.csair.com/new/us/en/shop/?execution=8313fc0e1a5b24caf6ccdc886d1034b8",
+        "oversea.csair.com/new/us/en/flights?m=0&p=100&flex=1&t=LAX-CAN-20210103": "http://oversea.csair.com/new/us/en/shop/?execution=687bc0f127a16052d196b6ad60f69988",
+        "oversea.csair.com/new/us/en/flights?m=0&p=100&flex=1&t=LAX-CAN-20210108": "http://oversea.csair.com/new/us/en/shop/?execution=70c97df0c592b23ae539d9fcd6bd1f85",
+        "oversea.csair.com/new/us/en/flights?m=0&p=100&flex=1&t=LAX-CAN-20210110": "http://oversea.csair.com/new/us/en/shop/?execution=858419db94efd7f0cd1cf2bf946ce99d",
+        "oversea.csair.com/new/us/en/flights?m=0&p=100&flex=1&t=LAX-CAN-20210115": "http://oversea.csair.com/new/us/en/shop/?execution=a449bde682b78327aa6e019cc7e37ab3",
+        "oversea.csair.com/new/us/en/flights?m=0&p=100&flex=1&t=LAX-CAN-20210117": "http://oversea.csair.com/new/us/en/shop/?execution=7c564b1ec7f55d3bc25e05b90cff499e",
+        "oversea.csair.com/new/us/en/flights?m=0&p=100&flex=1&t=LAX-CAN-20210122": "http://oversea.csair.com/new/us/en/shop/?execution=33bc7cfcb262af2288d9bcdb791ac734",
+        "oversea.csair.com/new/us/en/flights?m=0&p=100&flex=1&t=LAX-CAN-20210124": "http://oversea.csair.com/new/us/en/shop/?execution=146446d228b651081de823f54b6da3ed",
+    }
+    price_limit = 14000
+
+    start = time.time()
+    for k, v in southchina_targets.items():
+        date = re.search(r"(2021)(\d{2})(\d{2})", k)
+        y, m, d = date.groups()
+        if datetime.date(year, month, day) > datetime.date(int(y), int(m), int(d)):
+            continue
+
+        time.sleep(3)
+        browser.get(v)
+        try:
+            txt = [
+                e.get_attribute("textContent")
+                for e in browser.find_elements_by_class_name("day")
+            ]
+            txt = [e for e in txt if "USD" in e]
+            p = r"USD ([\d\.]+)"
+            hit_txt = []
+            for e in txt:
+                price = float(re.search(p, e).group(1))
+                if price <= price_limit:
+                    hit_txt.append(e)
+            hit = "\n".join(hit_txt)
+            if hit:
+                hit_dates[f"{y}{m}{d}"] = hit
+        except ValueError:
+            pass
+        print(
+            f"scrape_south_china_air @@ DONE {y}{m}{d}, elapsed {time.time()-start:.2f} sec"
+        )
+    return hit_dates
 
 
 def scrape_xmair(year, month, day):
@@ -144,25 +191,30 @@ def get_curl_cmd(body, args):
     cmd = f"curl '{twillio_url}' -X POST -u {login_name}:{pwd} -d '{payload}'"
     return cmd
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--login')
-    parser.add_argument('--password')
-    parser.add_argument('--fromnumber')
-    parser.add_argument('--tonumber')
-    parser.add_argument('--mode')
+    parser.add_argument("--login")
+    parser.add_argument("--password")
+    parser.add_argument("--fromnumber")
+    parser.add_argument("--tonumber")
+    parser.add_argument("--mode")
     args = parser.parse_args()
-    
-    if args.mode == 'prod':
+
+    if args.mode == "prod":
         from pyvirtualdisplay import Display
+
         display = Display(visible=0, size=(800, 600))
         display.start()
-    
+
     browser = get_browser(args)
-    target_logics = {"xmair": scrape_xmair}
+    target_logics = {
+        "xmair": scrape_xmair,
+        "southchina_air": scrape_south_china_air
+    }
     results = scrape_target(2021, 1, 1, target_logics)
     act_on_results(results)
-    
-    if args.mode == 'prod':
+
+    if args.mode == "prod":
         browser.quit()
         display.stop()
