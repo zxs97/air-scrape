@@ -52,7 +52,7 @@ def scrape_xmair(year, month, day):
         txt = get_response_xmair(url, attempt=10)
 
         if txt:
-            res = parse_xmairline(txt, price_limit=70000)
+            res = parse_xmairline(txt)
             print(res, txt)
             if res == True:
                 hit_y, hit_m, hit_d = d_["year"], d_["month"], d_["day"]
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     
     browser = get_browser(args)
     target_logics = {"xmair": scrape_xmair}
-    results = scrape_target(2021, 1, 31, target_logics)
+    results = scrape_target(2021, 1, 1, target_logics)
     act_on_results(results)
     
     if args.mode == 'prod':
