@@ -1,0 +1,35 @@
+# This is a basic workflow to help you get started with Actions
+
+name: flight scrape
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: 
+      - master
+  # schedule:
+    # - cron: "0,10,20,30,40,50 * * * *"
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  ns_ingest:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-18.04
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    # Runs a set of commands using the runners shell
+    - name: Pull and run scaper image
+      shell: bash
+      env:
+        LOGIN: ${{ secrets.LOGIN }}
+        PASSWORD: ${{ secrets.PASSWORD }}
+        TONUM: ${{ secrets.TONUMBER }}
+        FROMNUM: ${{ secrets.FROMNUMBER }}
+      run: |
+        docker run --rm --privileged -p 4000:4000 -e LOGIN="$LOGIN" -e PASSWORD="$PASSWORD" -e TONUM="$TONUM" -e FROMNUM="$FROMNUM" -e MODE=prod pagpires/scrape:flight
