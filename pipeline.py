@@ -38,6 +38,7 @@ def scrape_target(year, month, day, target_logics):
         print(f"Scraping {k}")
         hit_dates = scrape_func(year, month, day)
         if hit_dates:
+            print(hit_dates)
             results[k] = hit_dates
     return results
 
@@ -65,23 +66,26 @@ def scrape_south_china_air(year, month, day):
 
         time.sleep(3)
         browser.get(v)
-        try:
-            txt = [
-                e.get_attribute("textContent")
-                for e in browser.find_elements_by_class_name("day")
-            ]
-            txt = [e for e in txt if "USD" in e]
-            p = r"USD ([\d\.]+)"
-            hit_txt = []
-            for e in txt:
-                price = float(re.search(p, e).group(1))
-                if price <= price_limit:
-                    hit_txt.append(e)
-            hit = "\n".join(hit_txt)
-            if hit:
-                hit_dates[f"{y}{m}{d}"] = hit
-        except ValueError:
-            pass
+        if "USD" not in browser.page_source:
+            browser.get(f"https://{k}")
+        if "USD" in browser.page_source:
+            try:
+                txt = [
+                    e.get_attribute("textContent")
+                    for e in browser.find_elements_by_class_name("day")
+                ]
+                txt = [e for e in txt if "USD" in e]
+                p = r"USD ([\d\.]+)"
+                hit_txt = []
+                for e in txt:
+                    price = float(re.search(p, e).group(1))
+                    if price <= price_limit:
+                        hit_txt.append(e)
+                hit = "\n".join(hit_txt)
+                if hit:
+                    hit_dates[f"{y}{m}{d}"] = hit
+            except ValueError:
+                pass
         print(
             f"scrape_south_china_air @@ DONE {y}{m}{d}, elapsed {time.time()-start:.2f} sec"
         )
@@ -208,10 +212,7 @@ if __name__ == "__main__":
         display.start()
 
     browser = get_browser(args)
-    target_logics = {
-        "xmair": scrape_xmair,
-        "southchina_air": scrape_south_china_air
-    }
+    target_logics = {"xmair": scrape_xmair, "southchina_air": scrape_south_china_air}
     results = scrape_target(2021, 1, 1, target_logics)
     act_on_results(results)
 
